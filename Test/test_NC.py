@@ -6,7 +6,7 @@ import copy
 #print(os.getcwd())
 #sys.path.append('C:/Users/user/OneDrive/robot')
 #sys.path.append('c:/Users/user/Desktop/robot')
-sys.path.append('C:/Users/admin/Desktop/robot')
+sys.path.append('C:/Users/admin/Desktop/r1')
 from NavigationControl.NavigationControl2 import *
 from Test.RobotSim2 import RobotSim2
 from MapManagement.MapMOS import MapMOS
@@ -30,9 +30,9 @@ AMR_TOW_IDs = ['AMRTOW0', 'AMRTOW1']
 
 #MultiPath = {'AMRLIFT0': [219, 220, 7], 'AMRLIFT1': [222,221,220,219]}
 #multipath1 = {'AMRLIFT0': [205,206,207,208,209,210], 'AMRLIFT1': [225,223,222,221,220,219],'AMRTOW0':[230,233,234,235,237,238,239]}#,'AMRTOW1':[238,237,302,237,235,234,233]}
-multipath1 = {'AMRLIFT0': [205,206,207,208,209], 'AMRLIFT1': [223,214,212,211,210,5,210]}#,'AMRTOW0': [233,234,235,237,238,239]}#'AMRTOW0':[234,235,236,237,238,239]}
+multipath1 = {'AMRLIFT0': [205,206,207,208,209], 'AMRLIFT1': [223,214,212,211,210,5]}#,'AMRTOW0': [233,234,235,237,238,239]}#'AMRTOW0':[234,235,236,237,238,239]}
 #MultiPath2 = {'AMRLIFT0': [219, 220, 6], 'AMRLIFT1': [221,221,220,219,218]}
-Goal1 = {'AMRLIFT0': 209,'AMRLIFT1': 5 }#, 'AMRTOW0':239}
+Goal1 = {'AMRLIFT0': 209,'AMRLIFT1': 210 }#, 'AMRTOW0':239}
 #Goal2 = {'AMRLIFT1':218}
 # RobotInit
 AMR_LIFT_init = {'AMRLIFT0':205, 'AMRLIFT1':223} # 218, 222

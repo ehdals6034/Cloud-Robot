@@ -18,7 +18,6 @@ class NavigationControl2:
         self.start_idx = {} # the idx for new command
         self.robotStart = {} #mapf에게 전달
         self.robotGoal = {}  # New: The goal of each robot
-        self.subGoal = {} #MAPF에게 받은 path에 대한 goal
         self.robotPose = {}  # current pose of robot
     
         
@@ -28,7 +27,6 @@ class NavigationControl2:
             self.command_set[id] = []  # [robotTM, robotTM, robotTM, ...] #never change
             self.T_command[id] = [] # a sequence of vertices
             self.robotGoal[id] = -1  # New: The goal of each robot 있으면 vertex
-            self.subGoal[id] = -1  # 초기에는 -1 완료되면 0으로 바뀜
             self.start_idx[id] = 0  # num of split path from 0
     
 
@@ -99,7 +97,6 @@ class NavigationControl2:
                 self.current_command[id] = []  # a sequence of vertices 
                 self.command_set[id] = []  # [robotTM, robotTM, robotTM, ...]
                 self.start_idx[id] = 0  # start condition of robotTM
-                self.subGoal[id] = -1
     
         # initialize T_node
         #새로운 path가 들어왔을 때 T_node 초기화
@@ -405,95 +402,87 @@ class NavigationControl2:
                 check_num = pose_info[1]
                 robotPose[rid] = vid  # 들어온 vetex로
                 robotTM_check = {"current": False, "skip": False}
-                if self.subGoal[rid] == -1:
-                    if robotTM[rid] != []:
-                        # 들어온 robot pose check
-                        # ex)[1,1][2,2]
-                        if (vid[0] == robotTM[rid][0]) and (vid[1] == robotTM[rid][0]):  # 한번 이동했을 때            
+                #if self.subGoal[rid] == -1:
+                if robotTM[rid] != []:
+                    # 들어온 robot pose check
+                    # ex)[1,1][2,2]
+                    if (vid[0] == robotTM[rid][0]) and (vid[1] == robotTM[rid][0]):  # 한번 이동했을 때            
+                        robotTM_check["current"] = True
+                    elif (vid[0] == vid[1]):  # 몇번째로 앞에 들어왔는지 확인하고 skip
+                        if vid[0] in robotTM[rid]:  # T_node에서 pop할 list 생성
+                            vidx = robotTM[rid].index(vid[0])  # 0부터시작[2,2]
+                            list = robotTM[rid][0:vidx] #[0 1]
+                            vidx = vidx + 1 #뒤에 robotTM update하기 위해
+                            robotTM_check["skip"] = True
+                    # ex)[1,2][2,3] vid[] / T_node / robotTM
+                    # 이때 T_node update #robot_pose[i-1][1,1] robot_pose[i][4,3][3,4]
+                    elif (vid[0] < vid[1]):
+                        if vid[0] == robotTM[rid][0]: #vid[0]을 기준으로 비교
                             robotTM_check["current"] = True
-                        elif (vid[0] == vid[1]):  # 몇번째로 앞에 들어왔는지 확인하고 skip
-                            if vid[0] in robotTM[rid]:  # T_node에서 pop할 list 생성
-                                vidx = robotTM[rid].index(vid[0])  # 0부터시작[2,2]
-                                list = robotTM[rid][0:vidx] #[0 1]
-                                vidx = vidx + 1 #뒤에 robotTM update하기 위해
+                        elif vid[0] != robotTM[rid][0]:   
+                            if vid[0] in robotTM[rid]:
+                                vidx = robotTM[rid].index(vid[0])  # 0부터시작
+                                vidx = vidx + 1
                                 robotTM_check["skip"] = True
-
-                        # ex)[1,2][2,3] vid[] / T_node / robotTM
-                        # 이때 T_node update #robot_pose[i-1][1,1] robot_pose[i][4,3][3,4]
-                        elif (vid[0] < vid[1]):
-                            if vid[0] == robotTM[rid][0]: #vid[0]을 기준으로 비교
-                                robotTM_check["current"] = True
-
-                            elif vid[0] != robotTM[rid][0]:   
-                                if vid[0] in robotTM[rid]:
-                                    vidx = robotTM[rid].index(vid[0])  # 0부터시작
-                                    vidx = vidx + 1
-                                    robotTM_check["skip"] = True
-
-
-                        # ex)[2,1][3,2] [1 2] [11][12][21]  [11][21] [12][21] [1 2 3] => [1,2], [3,2]
-                        # 이때 T_node update
-                        elif (vid[0] > vid[1]):
-                            if vid[1] == robotTM[rid][0]: #vid[1]을 기준으로 비교
-                                robotTM_check["current"] = True
-
-                            elif vid[1] != robotTM[rid][0]:
-                                if vid[1] in robotTM[rid]:
-                                    vidx = robotTM[rid].index(vid[1])
-                                    vidx = vidx + 1
-                                    robotTM_check["skip"] = True
-
-                    # 지난 vertex삭제 / path 전달
-                    # if subGoal[rid] == -1:  # subGoal까지 안간 set에 대해서
-                    if robotTM_set[rid] != []:  # goal을 가지고 있다
-                        if robotTM[rid] != []:  # currnet_command를 가지고 있다 / current_command를 가지고 있지 않으면 수행을 안한거다 => robot_TM update할 필요가 없다.
-                            if robotTM_check["current"]:
-                                temp_path = robotTM[rid]
-                                del temp_path[0]
-                                print("Current", rid, temp_path)
-                                # 새로운 Current command
-                                self.current_command[rid] = copy.copy(temp_path)
-                            elif robotTM_check["skip"]:
-                                temp_path = robotTM[rid]
-                                # skip한거까지 찾아서 제거
-                                del temp_path[:vidx]
-                                print("skip", rid, temp_path)
-                                self.current_command[rid] = copy.copy(temp_path)
-
-                    # subGoal 완료처리 하는 부분 #종료되면 0 / 안되면 -1
-                    # 입력받은 vertex의 앞 뒤 숫자가 마지막 path의 값과 같으면 finish
-                    #robotTM_set['r3'][-1][-1]
-                    if check_num == 1:  # subGoal을 가진 상태
-                        if (vid[0] == self.robotGoal[rid]) or (vid[1] ==self.robotGoal[rid]): #두 vertex중 하나라도 같으면 goal #추후에 수정ex)1234543이경우 문제 발생 => TM의 마지막 list?
-                            # goal 완료하는 조건문
-                            self.subGoal[rid] = 0  # 종료되면 0 / 안되면 -1  s
-                            self.robotGoal[rid] = -1
-                            #print(self.subGoal[rid])
-                            print(rid,'--------------------finished-------------------------')
-
-                    #path 넘겨줌
-                    if self.subGoal[rid] == -1: #0 
-                        if robotTM_set[rid] != []:  # goal을 가지고 있다[][234] T[2] 
-                            if robotTM[rid] == []:
-                                print(123123,robotTM)
-                                #if path를 처음받는 경우일 때(이전에 조건을 만족 못시켜서 진행이 안되었을 때x)
-                                self.start_idx[rid] = self.start_idx[rid] + 1
-                                #if 뒤에 path가 더 있을경우
-                                #print(robotTM_set[rid][self.start_idx[rid]])
-                                robotTM[rid] = copy.copy(robotTM_set[rid][self.start_idx[rid]])
-                                #print(self.T_node,4444444)
-                                if self.T_node[robotTM[rid][1]][0] == rid:
-                                   #print(self.T_node[robotTM[rid][1]][0],55555555)
-                                    # 그 경우 path를 넘겨줌
-                                    #print(rid)
-                                    Rid_sendRobotTM.append(rid)
-                                    self.current_command[rid] = copy.copy(robotTM[rid])
-                                    self.T_command[rid] = copy.copy(robotTM[rid])
-                                    #self.Flag[rid] = 1 추후에 사용?
-                                else: #start_condition을 만족시키지 못할때
-                                    #print(rid,111)
-                                    self.start_idx[rid] = self.start_idx[rid] - 1 #start_idx원래대로
-
+                    # ex)[2,1][3,2] [1 2] [11][12][21]  [11][21] [12][21] [1 2 3] => [1,2], [3,2]
+                    # 이때 T_node update
+                    elif (vid[0] > vid[1]):
+                        if vid[1] == robotTM[rid][0]: #vid[1]을 기준으로 비교
+                            robotTM_check["current"] = True
+                        elif vid[1] != robotTM[rid][0]:
+                            if vid[1] in robotTM[rid]:
+                                vidx = robotTM[rid].index(vid[1])
+                                vidx = vidx + 1
+                                robotTM_check["skip"] = True
+                # 지난 vertex삭제 / path 전달
+                # if subGoal[rid] == -1:  # subGoal까지 안간 set에 대해서
+                if robotTM_set[rid] != []:  # goal을 가지고 있다
+                    if robotTM[rid] != []:  # currnet_command를 가지고 있다 / current_command를 가지고 있지 않으면 수행을 안한거다 => robot_TM update할 필요가 없다.
+                        if robotTM_check["current"]:
+                            temp_path = robotTM[rid]
+                            del temp_path[0]
+                            print("Current", rid, temp_path)
+                            # 새로운 Current command
+                            self.current_command[rid] = copy.copy(temp_path)
+                        elif robotTM_check["skip"]:
+                            temp_path = robotTM[rid]
+                            # skip한거까지 찾아서 제거
+                            del temp_path[:vidx]
+                            print("skip", rid, temp_path)
+                            self.current_command[rid] = copy.copy(temp_path)
+                # subGoal 완료처리 하는 부분 #종료되면 0 / 안되면 -1
+                # 입력받은 vertex의 앞 뒤 숫자가 마지막 path의 값과 같으면 finish
+                #robotTM_set['r3'][-1][-1]
+                if check_num == 1:  # subGoal을 가진 상태
+                    if (vid[0] == self.robotGoal[rid]) or (vid[1] ==self.robotGoal[rid]): #두 vertex중 하나라도 같으면 goal #추후에 수정ex)1234543이경우 문제 발생 => TM의 마지막 list?
+                        # goal 완료하는 조건문
+                        #self.subGoal[rid] = 0  # 종료되면 0 / 안되면 -1  s
+                        self.robotGoal[rid] = -1
+                        #print(self.subGoal[rid])
+                        print(rid,'--------------------finished-------------------------')
+                #path 넘겨줌
+                if self.robotGoal[rid] != -1:
+                #if self.subGoal[rid] == -1: #0 
+                    if robotTM_set[rid] != []:  # goal을 가지고 있다[][234] T[2] 
+                        if robotTM[rid] == []:
+                            print(123123,robotTM)
+                            #if path를 처음받는 경우일 때(이전에 조건을 만족 못시켜서 진행이 안되었을 때x)
+                            self.start_idx[rid] = self.start_idx[rid] + 1
+                            #if 뒤에 path가 더 있을경우
+                            #print(robotTM_set[rid][self.start_idx[rid]])
+                            robotTM[rid] = copy.copy(robotTM_set[rid][self.start_idx[rid]])
+                            #print(self.T_node,4444444)
+                            if self.T_node[robotTM[rid][1]][0] == rid:
+                               #print(self.T_node[robotTM[rid][1]][0],55555555)
+                                # 그 경우 path를 넘겨줌
+                                #print(rid)
+                                Rid_sendRobotTM.append(rid)
+                                self.current_command[rid] = copy.copy(robotTM[rid])
+                                self.T_command[rid] = copy.copy(robotTM[rid])
+                                #self.Flag[rid] = 1 추후에 사용?
+                            else: #start_condition을 만족시키지 못할때
+                                #print(rid,111)
+                                self.start_idx[rid] = self.start_idx[rid] - 1 #start_idx원래대로
 
 
         print('Rid_sendRobotTM:',Rid_sendRobotTM)
