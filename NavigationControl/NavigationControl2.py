@@ -186,146 +186,37 @@ class NavigationControl2:
             
         print('current_command', self.current_command)
     
-    # def get_multipath_plan(self, multipaths):
-    #     self.T_node = {}
-    #     not_overlap_path = []
-    #     check_node = []
-    #     check_node1 = []
-    #     path_list = list(multipaths.values())
-    #     rid_list = list(multipaths.keys())
-    #     # initialize command for RobotTM
-    #     for id in multipaths.keys():
-    #         if len(multipaths[id]) == 1:
-    #             stationary_check = (self.robotPose[id][0] == self.robotPose[id][1] == multipaths[id][0])
-    #         else: # control 요청
-    #             stationary_check = False
-    #         if not stationary_check:
-    #             self.current_command[id] = []  # a sequence of vertices
-    #             self.command_set[id] = []  # [robotTM, robotTM, robotTM, ...]
-    #             self.start_idx[id] = 0  # start condition of robotTM
-    #             self.subGoal[id] = -1
-    #     # 중복 제거한 path를 not_overlap_path에 대입 -> T_node 추가
-    #     for rid in range(len(rid_list)):
-    #         not_overlap_path.append([])
-    #         for path in range(len(path_list[rid])):
-    #             if path_list[rid][path] not in not_overlap_path[rid]:
-    #                 not_overlap_path[rid].append(path_list[rid][path])
-    #                 self.T_node[not_overlap_path[rid][path]] = []
-    #     print('not_overlap_path :', not_overlap_path)
-    #     # T_node에 robot_id 대입
-    #     for path in range(len(not_overlap_path[rid])):
-    #         for rid in range(len(rid_list)):
-    #             self.T_node[not_overlap_path[rid][path]].append(rid_list[rid])
-    #     print('T_node :', self.T_node)
-    #     # 여러 대의 robot_id를 가지고 있는 node 저장 => 이 node 기준으로 split
-    #     for node in self.T_node.keys():
-    #         a = self.T_node[node][0]
-    #         for i in range(1, len(self.T_node[node])):
-    #             if a != self.T_node[node][i]:
-    #                 check_node1.append(node)
-    #     for node in check_node1:
-    #         if node not in check_node:
-    #             check_node.append(node)
-    #     print('check_node:', check_node)
-    #     # path split
-    #     for rid, path in multipaths.items():
-    #         a = []
-    #         if path != []:
-    #             b = [path[0]]  # 0번째 원소 추가
-    #             for i in range(1, len(path)):  # 1번째 원소부터 비교하며 추가
-    #                 if path[i] in check_node and path[i] != b[0]:  # check_node에 있는 노드라면
-    #                     a.append(b)
-    #                     b = [path[i]]
-    #                 else:
-    #                     if path[i] != b[-1]:  # 마지막 원소가 아니다
-    #                         b.append(path[i])
-    #             a.append(b)
-    #         self.command_set[rid] = copy.copy(a)
-    #     # 마지막 element를 다음 path 첫 번째에 대입
-    #     for rid in self.command_set.keys(): #로봇에 대해서
-    #         command_set = copy.copy(self.command_set[rid])
-    #         for path in range(len(command_set)):
-    #             if len(command_set) > path > 0:
-    #                 last_element = command_set[path-1][-1] # 맨 뒤 path (ex. [1, 2, 3] -> 3)
-    #                 command_set[path].insert(0, last_element) # 맨 뒤 path를 다음 path의 맨 앞에 추가 (ex. [1][2] -> [1][1, 2])
-    #     print('command_set:', self.command_set)
-    #     for id in multipaths.keys():
-    #         self.current_command[id] = copy.copy(self.command_set[id][self.start_idx[id]]) #copy로 해야 reference가 안됨
-    #         self.T_command[id] = copy.copy(self.command_set[id][self.start_idx[id]])
-    #     print('current_command', self.current_command)
 
     #추후에 많은 수정이 필요
     #skip된 robot_pose는 고려되지 않은 사항
     def update_T_node(self, robotPose):     
         T_command = copy.copy(self.T_command) #T_node update시 참고할 current_command
         for rid, pose_info in robotPose.items():
-            if self.robotGoal[rid] != -1:        
+            if self.robotGoal[rid] != -1:    
                 vid = pose_info[0]
                 robotPose[rid] = vid
-                if len(T_command[rid]) >= 2:
-                    if T_command[rid][0] < T_command[rid][1]:
-                        if (vid[0] == vid[1]):
-                            if(T_command[rid][0] != vid[0]): #첫번째로 들어온게 아니다[123] => [22]
-                                vidx = T_command[rid].index(vid[0])  # 0부터시작 => 1
-                                list = T_command[rid][0:vidx] #[0:1] => [1]
-                                for i in list:
-                                    self.T_node[i].pop(0)  #T_node update
-                                del T_command[rid][:vidx] #[123] => [23]
-                                self.T_command[rid] = T_command[rid]
-                        # ex)[1,2][2,3] 
-                        elif (vid[0] < vid[1]): #[1,2]              
-                            if vid[1] in T_command[rid]:#[1,2] [123] #큰 원소로 비교
-                                vidx = T_command[rid].index(vid[1])  #위와 동일
-                                list = T_command[rid][0:vidx]
-                                for i in list:
-                                    self.T_node[i].pop(0)
-                                del T_command[rid][:vidx]
-                                self.T_command[rid] = T_command[rid]
-                        # ex)[2,1][3,2] [1 2] [11][12][21]  [11][21] [12][21] [1 2 3] => [1,2], [3,2]
-                        # 이때 T_node update
-                        elif (vid[0] > vid[1]): #[21] [123] // 이전에 [12]가 들어오면 T_command의 [1]이 없기 때문
-                            if vid[0] in T_command[rid]:
-                                vidx = T_command[rid].index(vid[0])  # 위와 동일
-                                list = T_command[rid][0:vidx]
-                                for i in list:
-                                    self.T_node[i].pop(0)
-                                del T_command[rid][:vidx]
-                                self.T_command[rid] = T_command[rid]
-                    #[54321]
-                    elif T_command[rid][0] > T_command[rid][1]: #[123,124,18] 같은경우 고려되지 x
-                        if (vid[0] == vid[1]): #[5,5]
-                            if(T_command[rid][0] != vid[0]): #첫번째로 들어온게 아니다[123] => [22]
-                                vidx = T_command[rid].index(vid[0])  # 0부터시작 => 1
-                                list = T_command[rid][0:vidx] #[0:1] => [1]
-                                for i in list:
-                                    self.T_node[i].pop(0)  #T_node update
-                                del T_command[rid][:vidx] #[123] => [23]
-                                self.T_command[rid] = T_command[rid]
-                        
-                        elif (vid[0] < vid[1]): #[4,5]       
-                            if vid[1] in T_command[rid]:#[543] #큰 원소로 비교
-                                vidx = T_command[rid].index(vid[0])  #위와 동일
-                                list = T_command[rid][0:vidx]
-                                for i in list:
-                                    self.T_node[i].pop(0)
-                                del T_command[rid][:vidx]
-                                self.T_command[rid] = T_command[rid]
-                        # ex)[2,1][3,2] [1 2] [11][12][21]  [11][21] [12][21] [1 2 3] => [1,2], [3,2]
-                        # 이때 T_node update
-                        elif (vid[0] > vid[1]): #[5,4]
-                            if vid[0] in T_command[rid]:#[543]
-                                vidx = T_command[rid].index(vid[1])  # 위와 동일
-                                list = T_command[rid][0:vidx]
-                                for i in list:
-                                    self.T_node[i].pop(0)
-                                del T_command[rid][:vidx]
-                                self.T_command[rid] = T_command[rid]
+                command_check = {"current": False}
+                if len(T_command[rid]) > 1:
+                    if T_command[rid][0] < T_command[rid][1]: #중복삭제 방지하기 위해
+                        if (vid[0] > vid[1]) and (vid[1] == T_command[rid][0]):
+                            command_check["current"] = True
+
+                    if T_command[rid][0] > T_command[rid][1]:
+                        if (vid[0] < vid[1]) and (vid[1] == T_command[rid][0]):
+                            command_check["current"] = True
 
 
-                        
-    
+                if command_check["current"] == True:
+                    node = T_command[rid][0]
+                    self.T_node[node].pop(0)
+                    T_command[rid].pop(0)
+                    self.T_command[rid] = T_command[rid]
+
         print('T_node:',self.T_node)
         print('T_command:',self.T_command)
+                        
+    
+    
     # def update_T_node(self, robotPose):     
     #     T_command = copy.copy(self.T_command) #T_node update시 참고할 current_command
     #     for rid, pose_info in robotPose.items():
