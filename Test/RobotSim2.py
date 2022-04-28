@@ -36,9 +36,7 @@ class RobotSim2:
             else:
                 pose_list2.append([i,0])
 
-        
-        self.random_list.append(pose_list2[0]) # 처음 값은 사라지면 안되니 append 해주기  
-        self.random_list.append(pose_list2[0])
+        self.random_list.extend([pose_list2[0],pose_list2[0]])
         for i in range(1, len(pose_list2)-1):  # 처음과 마지막 pose는 append로 직접 넣어주고, 가운데 pose는 1~3 사이 값(개수)을 곱해서 append
             n = random.randrange(1, 4)
             for j in range(n): # n!=0이면 n개 만큼 pose 추가
