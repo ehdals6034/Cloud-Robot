@@ -82,57 +82,158 @@ class NavigationControl2:
 
 
 
-    def get_multipath_plan(self, multipaths): 
+    # def get_multipath_plan(self, multipaths): 
+    #     # initialize T_node
+    #     self.T_node = {}
+    #     # initialize command for RobotTM
+    #     for id in multipaths.keys():
+    #         #이거 한번 체크
+    #         if len(multipaths[id]) == 1: #움직임의 요청이 들어오지 않았다? 
+    #             stationary_check = (self.robotPose[id][0] == self.robotPose[id][1] == multipaths[id][0])
+    #         else: #움직임의 요청이 들어왔다
+    #             stationary_check = False
+
+    #         if not stationary_check:
+    #             self.current_command[id] = []  # a sequence of vertices 
+    #             self.command_set[id] = []  # [robotTM, robotTM, robotTM, ...]
+    #             self.start_idx[id] = 0  # start condition of robotTM
+    
+    #     # initialize T_node
+    #     #새로운 path가 들어왔을 때 T_node 초기화
+    #     #1.중복 path 제거
+    #     path_list = list(multipaths.values())
+    #     rid_list = list(multipaths.keys())
+    #     for i in range(len(path_list)):
+    #         path_a = path_list[i]
+    #         path_b = itertools.groupby(path_a)
+    #         path_list[i] = [k for k, v in path_b]
+
+    #     #2. T_node에 key 추가
+    #     for i in range(len(multipaths.keys())):
+    #         for j in range(len(path_list[i])):
+    #             self.T_node[path_list[i][j]] = []
+
+
+    #     #3. T-Node에 로봇id 저장
+    #     # path길이를 비교하고 가장 긴 path의 크기(l_len)를 가져오자
+    #     for i in range(0, len(path_list)):
+    #         l_len = len(path_list[0])
+    #         if l_len < len(path_list[i]):
+    #             l_len = len(path_list[i])
+
+    #     #print('l_len:', l_len)
+
+
+    #     for t in range(l_len):  # 0~7
+    #         for rid in range(0, len(rid_list)):  # 0~2
+    #             try:
+    #                 self.T_node[path_list[rid][t]].append(rid_list[rid])
+    #             except:
+    #                 pass
+    #     print('T_node:', self.T_node)
+
+    #     # 서로다른 로봇이 있는 노드를 가져옴 => 이 노드 기준으로 split
+    #     check_node1 = []
+    #     check_node = []
+    #     for node in self.T_node.keys():
+    #         a = self.T_node[node][0]
+    #         for i in range(1, len(self.T_node[node])):
+    #             if a != self.T_node[node][i]:
+    #                 check_node1.append(node)
+
+    #     for node in check_node1:
+    #         if node not in check_node:
+    #             check_node.append(node)
+
+
+    #     print('check_node:', check_node)
+
+    #     # path split
+    #     for rid, path in multipaths.items():
+    #         a = []
+    #         if path != []:
+    #             b = [path[0]]  # 0번째 원소 추가
+    #             for i in range(1, len(path)):  # 1번째 원소부터 비교하며 추가
+    #                 if path[i] in check_node and path[i] != b[0]:  # check_node에 있는 노드라면
+    #                     a.append(b)
+    #                     b = [path[i]]
+
+    #                 else:
+    #                     if path[i] != b[-1]:  # 마지막 원소가 아니다
+    #                         b.append(path[i])
+
+    #             a.append(b)
+    #         self.command_set[rid] = copy.copy(a)
+
+    #     #마지막 element가 다음 첫번째로 들어갈 수 있도록
+    #     for current_robot_key in self.command_set.keys(): #로봇에 대해서
+    #                 current_robot_command = copy.copy(self.command_set[current_robot_key])
+    #                 for path_i in range(len(current_robot_command)):
+    #                     if len(current_robot_command) > path_i > 0:
+    #                         #마지막 element가 다음 처번째로 들어갈 수 있도록
+    #                         last_element = current_robot_command[path_i-1][-1] #하나 빼주고
+    #                         first_element = current_robot_command[path_i][0] #하나 더함
+    #                         if last_element != first_element: #다를 경우에만 넣어줌
+    #                             current_robot_command[path_i].insert(0, last_element) #다르면 추가
+    #                     #robot_command[current_robot_key].append(current_robot_command[path_i])
+        
+    #     #print('robot_command:',robot_command)
+    #     print('command_set:', self.command_set)
+
+    #     for id in multipaths.keys():
+    #         self.current_command[id] = copy.copy(self.command_set[id][self.start_idx[id]]) #copy로 해야 reference가 안됨
+    #         self.T_command[id] = copy.copy(self.command_set[id][self.start_idx[id]])
+            
+    #     print('current_command', self.current_command)
+    def get_multipath_plan(self, multipaths):
         # initialize T_node
         self.T_node = {}
+        max_len = 0
+        # multipaths = {'LIFT_0': [205,206,207,208,208,209,209,210,211], 'LIFT_1': [223,214,5,5,208,5,5,211,214,212,211,210,5,5,5,210]}
+        rid_list = list(multipaths.keys())
+        path_list = list(multipaths.values())
         # initialize command for RobotTM
         for id in multipaths.keys():
             #이거 한번 체크
-            if len(multipaths[id]) == 1: #움직임의 요청이 들어오지 않았다? 
+            if len(multipaths[id]) == 1: #움직임의 요청이 들어오지 않았다?
                 stationary_check = (self.robotPose[id][0] == self.robotPose[id][1] == multipaths[id][0])
             else: #움직임의 요청이 들어왔다
                 stationary_check = False
-
             if not stationary_check:
-                self.current_command[id] = []  # a sequence of vertices 
+                self.current_command[id] = []  # a sequence of vertices
                 self.command_set[id] = []  # [robotTM, robotTM, robotTM, ...]
                 self.start_idx[id] = 0  # start condition of robotTM
-    
-        # initialize T_node
-        #새로운 path가 들어왔을 때 T_node 초기화
-        #1.중복 path 제거
-        path_list = list(multipaths.values())
-        rid_list = list(multipaths.keys())
+                #self.subGoal[id] = -1
+        # 연속되는 중복 path 제거
+        print('path_list :', path_list)
+        path_list2 = {}
+        for rid in range(len(rid_list)):
+            path_list2[rid] = []
+            path_list2[rid].append(path_list[rid][0])
+            for path in range(len(path_list[rid])-1):
+                if path_list[rid][path] != path_list[rid][path+1]:
+                    path_list2[rid].append(path_list[rid][path+1])
+            path_list[rid] = path_list2[rid]
+        print('path_list :', path_list)
+        # path를 T_node에 추가
+        for rid in range(len(rid_list)):
+            for path in range(len(path_list[rid])):
+                self.T_node[path_list[rid][path]] = []
+        # 가장 긴 path 길이 찾기
         for i in range(len(path_list)):
-            path_a = path_list[i]
-            path_b = itertools.groupby(path_a)
-            path_list[i] = [k for k, v in path_b]
-
-        #2. T_node에 key 추가
-        for i in range(len(multipaths.keys())):
-            for j in range(len(path_list[i])):
-                self.T_node[path_list[i][j]] = []
-
-
-        #3. T-Node에 로봇id 저장
-        # path길이를 비교하고 가장 긴 path의 크기(l_len)를 가져오자
-        for i in range(0, len(path_list)):
-            l_len = len(path_list[0])
-            if l_len < len(path_list[i]):
-                l_len = len(path_list[i])
-
-        #print('l_len:', l_len)
-
-
-        for t in range(l_len):  # 0~7
-            for rid in range(0, len(rid_list)):  # 0~2
+            max_len = len(path_list[0])
+            if max_len < len(path_list[i]):
+                max_len = len(path_list[i])
+        print('max_len :', max_len)
+        # T_node에 robot_id 대입 -> path 길이가 다를 때 rid를 비교하면 빈칸이어서 오류 발생(try)
+        for path in range(max_len):
+            for rid in range(len(rid_list)):
                 try:
-                    self.T_node[path_list[rid][t]].append(rid_list[rid])
+                    self.T_node[path_list[rid][path]].append(rid_list[rid])
                 except:
                     pass
-        print('T_node:', self.T_node)
-
-        # 서로다른 로봇이 있는 노드를 가져옴 => 이 노드 기준으로 split
+        print('T_node :', self.T_node)
+        # 여러 대의 robot_id를 가지고 있는 node 저장 => 이 node 기준으로 split
         check_node1 = []
         check_node = []
         for node in self.T_node.keys():
@@ -140,52 +241,42 @@ class NavigationControl2:
             for i in range(1, len(self.T_node[node])):
                 if a != self.T_node[node][i]:
                     check_node1.append(node)
-
         for node in check_node1:
             if node not in check_node:
                 check_node.append(node)
-
-
         print('check_node:', check_node)
-
         # path split
         for rid, path in multipaths.items():
-            a = []
-            if path != []:
-                b = [path[0]]  # 0번째 원소 추가
-                for i in range(1, len(path)):  # 1번째 원소부터 비교하며 추가
-                    if path[i] in check_node and path[i] != b[0]:  # check_node에 있는 노드라면
-                        a.append(b)
-                        b = [path[i]]
-
-                    else:
-                        if path[i] != b[-1]:  # 마지막 원소가 아니다
+                a = []
+                if path != []:
+                    b = [path[0]]  # 0번째 원소 추가
+                    for i in range(1, len(path)):  # 1번째 원소부터 비교하며 추가
+                        if path[i] in check_node and path[i] != b[-1]:  # check_node에 있는 노드라면
+                            a.append(b)
+                            b = [path[i]]
+                        else:
                             b.append(path[i])
-
-                a.append(b)
-            self.command_set[rid] = copy.copy(a)
-
-        #마지막 element가 다음 첫번째로 들어갈 수 있도록
+                    a.append(b)
+                self.command_set[rid] = copy.copy(a)
+        print('split', self.command_set)
+        # 마지막 element를 다음 path 첫 번째에 넣어주기 (eg. [1,2][3] -> [1,2][2,3])
         for current_robot_key in self.command_set.keys(): #로봇에 대해서
                     current_robot_command = copy.copy(self.command_set[current_robot_key])
                     for path_i in range(len(current_robot_command)):
                         if len(current_robot_command) > path_i > 0:
-                            #마지막 element가 다음 처번째로 들어갈 수 있도록
-                            last_element = current_robot_command[path_i-1][-1] #하나 빼주고
-                            first_element = current_robot_command[path_i][0] #하나 더함
+                            last_element = current_robot_command[path_i-1][-1]
+                            first_element = current_robot_command[path_i][0]
                             if last_element != first_element: #다를 경우에만 넣어줌
                                 current_robot_command[path_i].insert(0, last_element) #다르면 추가
                         #robot_command[current_robot_key].append(current_robot_command[path_i])
-        
         #print('robot_command:',robot_command)
         print('command_set:', self.command_set)
-
-        for id in multipaths.keys():
+        for id in rid_list:
             self.current_command[id] = copy.copy(self.command_set[id][self.start_idx[id]]) #copy로 해야 reference가 안됨
             self.T_command[id] = copy.copy(self.command_set[id][self.start_idx[id]])
-            
         print('current_command', self.current_command)
-    
+        print('\n')
+        print('-------------------------------------------------------------------------------------------------')
 
     #추후에 많은 수정이 필요
     #suppose 1.skip된 경우 제외 2.모든 robotpose가 존재
@@ -309,7 +400,8 @@ class NavigationControl2:
                         current_command[rid].pop(0)
 
                 #goal check
-                if check_num == 1:  # subGoal을 가진 상태
+                #if command_set[rid] == []:
+                if check_num == 1 and len(command_set[rid]) == 1:  # subGoal을 가진 상태
                     if (vid[0] == self.robotGoal[rid]) or (vid[1] ==self.robotGoal[rid]): #두 vertex중 하나라도 같으면 goal #추후에 수정ex)1234543이경우 문제 발생 => TM의 마지막 list?
                         # goal 완료하는 조건문
                         #self.subGoal[rid] = 0  # 종료되면 0 / 안되면 -1  s

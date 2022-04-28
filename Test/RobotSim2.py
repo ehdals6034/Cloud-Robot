@@ -18,6 +18,7 @@ class RobotSim2:
         self.plan = plan.copy()
         self.status = 'ing'
 
+
     def random_pose_generator(self):
         self.random_list = []
         plan = self.plan[1].copy() #plan : ['move',[1,2]]
@@ -30,13 +31,13 @@ class RobotSim2:
             pose_list1.append([plan[i+1], plan[i+1]])
         
         pose_list2 = []
-        for i in pose_list1:
-            if i in pose_list1[-3:]: #[1,1][1,2] [2,1] [2,2]
-                pose_list2.append([i,1])
-            else:
-                pose_list2.append([i,0])
+        for i in pose_list1[:-2]:           
+            pose_list2.append([i,0])
+        for i in pose_list1[-2:]:   
+            pose_list2.append([i,1])
 
-        self.random_list.extend([pose_list2[0],pose_list2[0]])
+        
+        self.random_list.extend([pose_list2[0],pose_list2[0]])# 처음 값은 사라지면 안되니 append 해주기  
         for i in range(1, len(pose_list2)-1):  # 처음과 마지막 pose는 append로 직접 넣어주고, 가운데 pose는 1~3 사이 값(개수)을 곱해서 append
             n = random.randrange(1, 4)
             for j in range(n): # n!=0이면 n개 만큼 pose 추가
@@ -48,6 +49,33 @@ class RobotSim2:
     
         return self.random_list
 
+    # def random_pose_generator(self):
+    #     self.random_list = []
+    #     plan = self.plan[1].copy() #plan : ['move',[1,2]]
+    #     pose_list1 = [] #pose ex)[1,1],[1,2],.
+    #     pose_list2 = [] #pose with number(0,1) ex)[[1,1],0],[[1,1],0],...
+    #     pose_list1.append([plan[0],plan[0]])
+    #     for i in range(len(plan)-1):         
+    #         pose_list1.append([plan[i], plan[i+1]])
+    #         pose_list1.append([plan[i+1], plan[i]])
+    #         pose_list1.append([plan[i+1], plan[i+1]])
+        
+    #     pose_list2.extend([pose_list1[0],pose_list1[0]])
+    #     for i in range(1, len(pose_list1)-1):  # 처음과 마지막 pose는 append로 직접 넣어주고, 가운데 pose는 1~3 사이 값(개수)을 곱해서 append
+    #         n = random.randrange(1, 4)
+    #         for j in range(n): # n!=0이면 n개 만큼 pose 추가
+    #             pose_list2.append(pose_list1[i])        
+    #     pose_list2.append(pose_list1[-1])
+        
+
+    #     for i in pose_list2:
+    #         if i in pose_list2[-1:]: #[1,1][1,2] [2,1] [2,2]
+    #             self.random_list.append([i,1])
+    #         else:
+    #             self.random_list.append([i,0])
+    #     print(self.id,'random_pose:',self.random_list)
+    #     return self.random_list
+    
     def move(self):
         self.random_list
         randomlist = self.random_list.copy()
