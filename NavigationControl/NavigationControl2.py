@@ -401,8 +401,8 @@ class NavigationControl2:
 
                 #goal check
                 #if command_set[rid] == []:
-                if check_num == 1 and len(command_set[rid]) == 1:  # subGoal을 가진 상태
-                    if (vid[0] == self.robotGoal[rid]) or (vid[1] ==self.robotGoal[rid]): #두 vertex중 하나라도 같으면 goal #추후에 수정ex)1234543이경우 문제 발생 => TM의 마지막 list?
+                if check_num == 1:  # subGoal을 가진 상태
+                    if (vid[0] == self.robotGoal[rid]) and (vid[1] ==self.robotGoal[rid]): #두 vertex중 하나라도 같으면 goal #추후에 수정ex)1234543이경우 문제 발생 => TM의 마지막 list?
                         # goal 완료하는 조건문
                         #self.subGoal[rid] = 0  # 종료되면 0 / 안되면 -1  s
                         self.robotGoal[rid] = -1
