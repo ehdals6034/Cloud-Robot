@@ -1,8 +1,10 @@
 import random
 import copy
-class RobotSim2:
+#command set의 마지막 list를 path split할 때 가지고온다
+#이 path list를 이용하여 goal 부분 추가
+class RobotSim2: #[12][34][432]
     #로봇이 가져야할 정보 : id,state,random 이동 state
-    def __init__(self,id,x,y):
+    def __init__(self,id,x,y,last_path):
         self.current_state = [] #update TM에 보낼 state
         self.trajectory = []
         self.id = id
@@ -11,6 +13,7 @@ class RobotSim2:
         self.random_list = []
         self.x = x
         self.y = y
+        self.last_path = last_path
 
     #로봇에게 plan을 줌
     def insert_plan(self, plan): 
@@ -20,6 +23,7 @@ class RobotSim2:
 
 
     def random_pose_generator(self):
+        print(self.last_path,123123)
         self.random_list = []
         plan = self.plan[1].copy() #plan : ['move',[1,2]]
         pose_list1 = [] #pose ex)[1,1],[1,2],.
@@ -31,10 +35,17 @@ class RobotSim2:
             pose_list1.append([plan[i+1], plan[i+1]])
         
         pose_list2 = []
-        for i in pose_list1[:-2]:           
-            pose_list2.append([i,0])
-        for i in pose_list1[-2:]:   
-            pose_list2.append([i,1])
+        if plan == self.last_path:
+            for i in pose_list1[:-2]:           
+                pose_list2.append([i,0])
+        
+            for i in pose_list1[-2:]:   
+                pose_list2.append([i,1])
+        
+        else:
+            for i in pose_list1:           
+                pose_list2.append([i,0])
+        
 
         
         self.random_list.extend([pose_list2[0],pose_list2[0]])# 처음 값은 사라지면 안되니 append 해주기  

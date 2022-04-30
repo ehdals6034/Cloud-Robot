@@ -28,12 +28,11 @@ AMR_TOW_IDs = ['AMRTOW0', 'AMRTOW1']
 
 
 
-#MultiPath = {'AMRLIFT0': [219, 220, 7], 'AMRLIFT1': [222,221,220,219]}
-#multipath1 = {'AMRLIFT0': [205,206,207,208,209,210], 'AMRLIFT1': [225,223,222,221,220,219],'AMRTOW0':[230,233,234,235,237,238,239]}#,'AMRTOW1':[238,237,302,237,235,234,233]}
 #multipath1 = {'AMRLIFT0': [205,206,207,208,209,210,211], 'AMRLIFT1': [223,214,212,211,210,5,210]}#,'AMRTOW0': [233,234,235,237,238,239]}#'AMRTOW0':[234,235,236,237,238,239]}
-multipath1 = {'AMRLIFT0': [214, 212, 211, 210, 209, 208], 'AMRLIFT1': [210, 209, 208, 207, 206]}
+multipath1 = {'AMRLIFT0': [205,206,207,208,209,210,211], 'AMRLIFT1': [206,207,208,209,210,5,210]}
+#multipath1 = {'AMRLIFT0': [214, 212, 211, 210, 209, 208], 'AMRLIFT1': [210, 209, 208, 207, 206]}
 #MultiPath2 = {'AMRLIFT0': [219, 220, 6], 'AMRLIFT1': [221,221,220,219,218]}
-Goal1 = {'AMRLIFT0': 208,'AMRLIFT1': 206 }#, 'AMRTOW0':239}
+Goal1 = {'AMRLIFT0': 211,'AMRLIFT1': 210 }#, 'AMRTOW0':239}
 #Goal2 = {'AMRLIFT1':218}
 # RobotInit
 AMR_LIFT_init = {'AMRLIFT0':209, 'AMRLIFT1':223} # 218, 222
@@ -64,9 +63,9 @@ navcont.get_multipath_plan(multipath1) # allocate multi paths
 
 robots = {}
 for rid, node in AMR_LIFT_init.items():
-    robots[rid] = RobotSim2(rid, MAP.VertexPos[node][0], MAP.VertexPos[node][2])
-for rid, node in AMR_TOW_init.items():
-    robots[rid] = RobotSim2(rid, MAP.VertexPos[node][0], MAP.VertexPos[node][2])
+    robots[rid] = RobotSim2(rid, MAP.VertexPos[node][0], MAP.VertexPos[node][2],copy.copy(navcont.command_set[rid][-1]))
+# for rid, node in AMR_TOW_init.items():
+#     robots[rid] = RobotSim2(rid, MAP.VertexPos[node][0], MAP.VertexPos[node][2],copy.copy(navcont.command_set[rid][-1]))
 
 # # MAP.draw_map()
 # # for rid, robot in robots.items():
@@ -149,4 +148,3 @@ while FLAG_RUN:
     print('------------------------------------------')
 
 plt.show()
-
