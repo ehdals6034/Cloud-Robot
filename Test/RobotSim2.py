@@ -23,7 +23,7 @@ class RobotSim2: #[12][34][432]
 
 
     def random_pose_generator(self):
-        print(self.last_path,123123)
+        #print(self.last_path,123123)
         self.random_list = []
         plan = self.plan[1].copy() #plan : ['move',[1,2]]
         pose_list1 = [] #pose ex)[1,1],[1,2],.

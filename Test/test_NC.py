@@ -16,29 +16,25 @@ from matplotlib.animation import FuncAnimation
 # Setting
 map_file = "./data/map_cloud.txt"
 MAP = MapMOS(map_file)
-AMR_LIFT_IDs = ['AMRLIFT0', 'AMRLIFT1']
+AMR_LIFT_IDs = ['AMRLIFT0', 'AMRLIFT1', 'AMRLIFT2']
 AMR_TOW_IDs = ['AMRTOW0', 'AMRTOW1']
-draw_set={'AMRLIFT0':'ro','AMRLIFT1': 'bo', 'AMRTOW0':'r^', 'AMRTOW1':'b^'}
+draw_set={'AMRLIFT0':'ro','AMRLIFT1': 'bo','AMRLIFT2': 'go','AMRTOW0':'r^', 'AMRTOW1':'b^'}
 
 
+#T_command[0] [23] in pose[][21] [321] [21][12]
+#history
 
-#AMR_IDs = ['AMRLIFT0','AMRLIFT1','AMRLIFT2']
-AMR_LIFT_IDs = ['AMRLIFT0', 'AMRLIFT1']
-AMR_TOW_IDs = ['AMRTOW0', 'AMRTOW1']
-
-
-
-#multipath1 = {'AMRLIFT0': [205,206,207,208,209,210,211], 'AMRLIFT1': [223,214,212,211,210,5,210]}#,'AMRTOW0': [233,234,235,237,238,239]}#'AMRTOW0':[234,235,236,237,238,239]}
-multipath1 = {'AMRLIFT0': [205,206,207,208,209,210,211], 'AMRLIFT1': [206,207,208,209,210,5,210]}
+#multipath1 = {'AMRLIFT0': [205,206,207,208,209,210,211,212,214,223], 'AMRLIFT1': [223,214,212,211,210,5,210,209,208,207]}#,'AMRTOW0': [233,234,235,237,238,239]}#'AMRTOW0':[234,235,236,237,238,239]}
+#multipath1 = {'AMRLIFT0': [205,206,207,208,209,210,211], 'AMRLIFT1': [206,207,208,209,210,5,210]}
 #multipath1 = {'AMRLIFT0': [214, 212, 211, 210, 209, 208], 'AMRLIFT1': [210, 209, 208, 207, 206]}
-#MultiPath2 = {'AMRLIFT0': [219, 220, 6], 'AMRLIFT1': [221,221,220,219,218]}
-Goal1 = {'AMRLIFT0': 211,'AMRLIFT1': 210 }#, 'AMRTOW0':239}
+multipath1 = {'AMRLIFT0': [206,207,208,209,210,211,212,214],'AMRLIFT1': [207,208,209,210,5,210,211,212],'AMRLIFT2': [208,209,210,211,6,6,6,211]}
+Goal1 = {'AMRLIFT0':214, 'AMRLIFT1':212,'AMRLIFT2':211}#, 'AMRTOW0':239}
 #Goal2 = {'AMRLIFT1':218}
 # RobotInit
-AMR_LIFT_init = {'AMRLIFT0':209, 'AMRLIFT1':223} # 218, 222
+AMR_LIFT_init = {'AMRLIFT0':206, 'AMRLIFT1':207,'AMRLIFT2':208} # 218, 222
 AMR_TOW_init = {'AMRTOW0':103, 'AMRTOW1':104}
-init_poses = {'AMRLIFT0':[205,205], 'AMRLIFT1':[223,223]}#,'AMRTOW0' : [230,230]}#, 'AMRTOW0': [223,223]}
-init_poses2 = {'AMRLIFT0':[103,103], 'AMRLIFT1':[223,223], 'AMRTOW0':[22,22]}
+init_poses = {'AMRLIFT0':[205,205], 'AMRLIFT1':[207,207],'AMRLIFT2':[208,208]}#,'AMRTOW0' : [230,230]}#, 'AMRTOW0': [223,223]}
+#init_poses2 = {'AMRLIFT0':[103,103], 'AMRLIFT1':[223,223], 'AMRTOW0':[22,22]}
 
 # # CargoInit
 # Cargo_init = [6,3]
@@ -143,7 +139,7 @@ while FLAG_RUN:
         
     #plt.show()
     plt.cla()
-    # if num11 == 1:
+    # if num11 == 5:
     #     break   
     print('------------------------------------------')
 
